@@ -13,7 +13,7 @@ import numpy as np
 import pandas as pd
 import requests
 
-import utils
+import util
 
 
 BASEURL     = 'http://movie.naver.com/movie/point/af/list.nhn'
@@ -53,11 +53,15 @@ def parse_item(item):
 
 
 def crawl_rating_page(url):
-    resp = requests.get(url)
-    root = html.fromstring(resp.text)
-    items = root.xpath('//body//table[@class="list_netizen"]//tr')[1:]
-    npages = max(map(int, ([0] + root.xpath('//div[@class="paging"]//a/span/text()'))))
-    return list(filter(None, [parse_item(item) for item in items])), npages
+    try:
+        resp = requests.get(url, timeout = 5)
+        root = html.fromstring(resp.text)
+        items = root.xpath('//body//table[@class="list_netizen"]//tr')[1:]
+        npages = max(map(int, ([0] + root.xpath('//div[@class="paging"]//a/span/text()'))))
+        return list(filter(None, [parse_item(item) for item in items])), npages
+    except Exception as e:
+        print(e, "connect time out")
+        return [], 0
 
 
 def crawl_movie(movie_id):
@@ -71,23 +75,28 @@ def crawl_movie(movie_id):
         if page_num >= npages - 1:
             break
     if items:
-        utils.write_json(items, '%s/%s.json' % (DATADIR, movie_id))
+        if not os.path.isdir(DATADIR):
+            os.makedirs(DATADIR)
+        util.write_json(items, '%s/%s.json' % (DATADIR, movie_id))
         return items
     else:
         return []
 
 
 def get_index(filename):
+    movie_id, total = 129406, 0
     if os.path.exists(filename):
-        movie_id, total = map(int, utils.read_txt(filename).split('\n')[0].split(','))
-    else:
-        movie_id, total = 129406, 0
+        id, to = map(int, util.read_txt(filename).split('\n')[0].split(','))
+        if (id != 0):
+            movie_id = id
+            total = to
+        
     print(movie_id, total)
     return [movie_id, total]
 
 
 def put_index(movie_id, total, filename):
-    utils.write_txt('%s,%s' % (movie_id, total), filename)
+    util.write_txt('%s,%s\n' % (movie_id, total), filename)
 
 
 def merge_ratings():
@@ -102,10 +111,10 @@ def merge_ratings():
     write_row = lambda l, f: f.write('\t'.join(l) + '\n')
 
     filenames = glob('%s/*' % DATADIR)
-    with open(TMPFILE, 'w') as f:
+    with open(TMPFILE, 'w', encoding='utf8') as f:
         write_row('id document label'.split(), f)
         for filename in filenames:
-            for review in utils.read_json(filename):
+            for review in util.read_json(filename):
                 rating = int(review['rating'])
                 if rating > 8:      # positive 9 10
                     write_row([review['review_id'], sub_space(review['review']), '1'], f)
