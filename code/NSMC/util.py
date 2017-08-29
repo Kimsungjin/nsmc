@@ -9,7 +9,7 @@ def write_json(items,filenames):
             json.dump(items,outfile, ensure_ascii=False, indent=4)
 
 def write_txt(contents, filename):
-        with open(filename,'a') as f:
+        with open(filename, 'w') as f:
                 f.write(contents)
 
 def read_txt(filename):

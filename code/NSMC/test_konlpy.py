@@ -23,6 +23,7 @@ import sys
 import util
 import time
 from tqdm import *
+from copy import copy
 
 import csv
 
@@ -32,21 +33,23 @@ Rating_Test_File = "../../ratings_test.txt"
 Train_Token_File = "../../train_token.csv"
 Test_Token_File = "../../test_token.csv"
 
+Train_Token_Idx = "../../tarin_idx.txt"
+Test_Token_Idx = "../../test_idx.txt"
+
 pos_tagger = Twitter()
 
 def read_csv(file_name):
     csvList = []
     with open(file_name, 'r', encoding = 'utf-8') as f:
         rdr = csv.reader(f)
-        #for row in rdr:
-        #    csvList.append((row[:-1], row[-1]))
+        for row in rdr:
+            csvList.append((row[:-1], row[-1]))
         return csvList
         
 
 def write_csv(file_name, contents):
     with open(file_name, 'a', encoding = 'utf-8', newline = '') as f:
         csv.writer(f).writerow(contents)
-
 
 def read_data(filename):
     with open(filename, 'r', encoding = 'utf-8') as f:
@@ -82,33 +85,49 @@ def tokenizing():
     print('@@@ Start Tokenizing @@@\n')
     tstart = time.time()
 
-    train_doc = test_doc = []
-    if os.path.exists(Train_Token_File):
-        train_token = [(row[:-1], row[-1]) for r in read_csv(Train_Token_File)]
-    else:
-        train_data = read_data(Rating_Train_File)
-        print(len(train_data))
-        print(len(train_data[0]))
-        train_doc = [procToken(Train_Token_File, row[1], row[2]) for row in tqdm(train_data, ncols = 47, ascii = True, desc = 'tarin_doc')]
-        #train_doc = [(tonkenize(row[1]), row[2]) for row in tqdm(train_data, ncols = 47, ascii = True, desc = 'tarin_doc')]
-        #for r in tqdm(train_doc, ncols = 47, ascii = True, desc = 'tarin_csv'):
-        #    w = r[0]
-        #    w.append(r[1])
-        #    write_csv(Train_Token_File, w)
+    train_doc = []
+    train_data = read_data(Rating_Train_File)
+    train_idx =  0
+    if os.path.exists(Train_Token_Idx):
+        train_idx = int(util.read_txt(Train_Token_Idx))
 
-
-    if os.path.exists(Test_Token_File):
-        test_doc = [(row[:-1], row[-1]) for r in read_csv(Test_Token_File)]
+    if os.path.exists(Train_Token_File) and train_idx + 1 == len(train_data):
+        train_doc = read_csv(Train_Token_File)
     else:
-        test_data = read_data(Rating_Test_File)
-        print(len(test_data))
-        print(len(test_data[0]))
-        test_doc = [procToken(Test_Token_File, row[1], row[2]) for row in tqdm(test_data, ncols = 47, ascii = True, desc = 'test_doc')]
-        #test_doc = [(tonkenize(row[1]), row[2]) for row in tqdm(test_data, ncols = 47, ascii = True, desc = 'test_doc')]
-        #for r in tqdm(test_doc, ncols = 47, ascii = True, desc = 'test_csv'):
-        #    w = r[0]
-        #    w.append(r[1])
-        #    write_csv(Test_Token_File, w)
+        #print(len(train_data))
+        #print(len(train_data[0]))
+        #train_doc = [procToken(Train_Token_File, row[1], row[2]) for row in tqdm(train_data, ncols = 47, ascii = True, desc = 'tarin_doc')]
+        train_doc = [(tonkenize(row[1]), row[2]) for row in tqdm(train_data, ncols = 47, ascii = True, desc = 'tarin_doc')]
+        temp_train_doc = copy(train_doc)
+        for idx, r in tqdm(enumerate(temp_train_doc), ncols = 47, ascii = True, desc = 'tarin_csv'):
+            if idx <= train_idx:
+                continue
+
+            r[0].append(r[1])
+            write_csv(Train_Token_File, r[0])
+            util.write_txt(str(idx), Train_Token_Idx)
+
+    test_doc = []
+    test_data = read_data(Rating_Test_File)
+    test_idx = 0
+    if os.path.exists(Test_Token_Idx):
+        test_idx = int(util.read_txt(Test_Token_Idx))
+
+    if os.path.exists(Test_Token_File) and test_idx + 1 == len(test_data):
+        test_doc = read_csv(Test_Token_File)
+    else:
+        #print(len(test_data))
+        #print(len(test_data[0]))
+        #test_doc = [procToken(Test_Token_File, row[1], row[2]) for row in tqdm(test_data, ncols = 47, ascii = True, desc = 'test_doc')]
+        test_doc = [(tonkenize(row[1]), row[2]) for row in tqdm(test_data, ncols = 47, ascii = True, desc = 'test_doc')]
+        temp_test_doc = copy(test_doc)
+        for idx, r in tqdm(enumerate(temp_test_doc), ncols = 47, ascii = True, desc = 'test_csv'):
+            if idx <= test_idx:
+                continue
+
+            r[0].append(r[1])
+            write_csv(Test_Token_File, r[0])
+            util.write_txt(str(idx), Test_Token_Idx)
     
     #print(len(train_data))
     #print(len(train_data[0]))
@@ -153,7 +172,7 @@ def tokenizing():
     tend = time.time()
     elapsed = tend - tstart
     print('data packing time : ', elapsed)
-    pprint(train_doc[0])
+    #pprint(train_doc[0])
 
     return (train_doc, test_doc)
 
