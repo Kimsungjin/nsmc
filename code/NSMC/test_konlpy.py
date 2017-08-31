@@ -36,7 +36,32 @@ Test_Token_File = "../../test_token.csv"
 Train_Token_Idx = "../../tarin_idx.txt"
 Test_Token_Idx = "../../test_idx.txt"
 
+kWriteDataIdx = -1
+
 pos_tagger = Twitter()
+
+def enum(*sequential, **named):
+    enums = dict(zip(sequential, range(len(sequential))), **named)
+    reverse = dict((value, key) for key, value in enums.items())
+    enums['reverse_mapping'] = reverse
+    return type('Enum', (), enums)
+
+file_type = enum("txt", "csv")
+
+
+#class CFile:
+#    def __init__(self, fileName):
+#        self.fileName = fileName
+
+#    def read(self):
+#        print("read data")
+
+#    def write(self):
+#        print("write data")
+
+#class CFileCSV(CFile):
+#    pass
+
 
 def read_csv(file_name):
     csvList = []
@@ -45,7 +70,6 @@ def read_csv(file_name):
         for row in rdr:
             csvList.append((row[:-1], row[-1]))
         return csvList
-        
 
 def write_csv(file_name, contents):
     with open(file_name, 'a', encoding = 'utf-8', newline = '') as f:
@@ -87,11 +111,11 @@ def tokenizing():
 
     train_doc = []
     train_data = read_data(Rating_Train_File)
-    train_idx =  0
+    train_idx = kWriteDataIdx
     if os.path.exists(Train_Token_Idx):
         train_idx = int(util.read_txt(Train_Token_Idx))
 
-    if os.path.exists(Train_Token_File) and train_idx + 1 == len(train_data):
+    if os.path.exists(Train_Token_File) and train_idx != kWriteDataIdx and train_idx + 1 >= len(train_data):
         train_doc = read_csv(Train_Token_File)
     else:
         #print(len(train_data))
@@ -99,21 +123,25 @@ def tokenizing():
         #train_doc = [procToken(Train_Token_File, row[1], row[2]) for row in tqdm(train_data, ncols = 47, ascii = True, desc = 'tarin_doc')]
         train_doc = [(tonkenize(row[1]), row[2]) for row in tqdm(train_data, ncols = 47, ascii = True, desc = 'tarin_doc')]
         temp_train_doc = copy(train_doc)
+        if train_idx != kWriteDataIdx:
+            temp_train_doc = temp_train_doc[train_idx+1:]
+        train_f = open(Train_Token_File, 'a', encoding = 'utf-8', newline = '')
+        train_wf = csv.writer(train_f)
         for idx, r in tqdm(enumerate(temp_train_doc), ncols = 47, ascii = True, desc = 'tarin_csv'):
-            if idx <= train_idx:
-                continue
-
+            #if idx <= train_idx:
+            #    continue
             r[0].append(r[1])
-            write_csv(Train_Token_File, r[0])
+            #write_csv(Train_Token_File, r[0])
+            train_wf.writerow(r[0])
             util.write_txt(str(idx), Train_Token_Idx)
 
     test_doc = []
     test_data = read_data(Rating_Test_File)
-    test_idx = 0
+    test_idx = kWriteDataIdx
     if os.path.exists(Test_Token_Idx):
         test_idx = int(util.read_txt(Test_Token_Idx))
 
-    if os.path.exists(Test_Token_File) and test_idx + 1 == len(test_data):
+    if os.path.exists(Test_Token_File) and test_idx != kWriteDataIdx and test_idx + 1 >= len(test_data):
         test_doc = read_csv(Test_Token_File)
     else:
         #print(len(test_data))
@@ -121,12 +149,16 @@ def tokenizing():
         #test_doc = [procToken(Test_Token_File, row[1], row[2]) for row in tqdm(test_data, ncols = 47, ascii = True, desc = 'test_doc')]
         test_doc = [(tonkenize(row[1]), row[2]) for row in tqdm(test_data, ncols = 47, ascii = True, desc = 'test_doc')]
         temp_test_doc = copy(test_doc)
+        if test_idx != kWriteDataIdx:
+            temp_test_doc = temp_test_doc[test_idx+1:]
+        test_f = open(Test_Token_File, 'a', encoding = 'utf-8', newline = '')
+        test_wf = csv.writer(ff)
         for idx, r in tqdm(enumerate(temp_test_doc), ncols = 47, ascii = True, desc = 'test_csv'):
-            if idx <= test_idx:
-                continue
-
+            #if idx <= test_idx:
+            #    continue
             r[0].append(r[1])
-            write_csv(Test_Token_File, r[0])
+            #write_csv(Test_Token_File, r[0])
+            test_wf.writerow(r[0])
             util.write_txt(str(idx), Test_Token_Idx)
     
     #print(len(train_data))
