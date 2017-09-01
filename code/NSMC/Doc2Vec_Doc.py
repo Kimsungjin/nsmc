@@ -88,10 +88,8 @@ def similar_Word(word):
     pprint(retStr)
 
 def similar_Doc(tag):
-    infer_vector = D2VModel.infer_vector(tag)
-    retStr = D2VModel.most_similar([infer_vector])
+    retStr = D2VModel.docvecs.most_similar(tag)
     pprint(retStr)
-
 
 if __name__=='__main__':
     print('Train or See a Result?(T/R)')
@@ -104,9 +102,9 @@ if __name__=='__main__':
         #train_doc = [(tokenize(row[1]), row[2]) for row in tqdm(train_data, ncols = 47, ascii = True, desc = 'tarin_doc')]
         D2VModel = procGensim(train_doc, doc2vecFile)
     else:
-        D2VModel = doc2vec.Word2Vec.load(doc2vecFile)
+        D2VModel = doc2vec.Doc2Vec.load(doc2vecFile)
         train_data = read_data(Rating_Train_File)
-        train_data = train_data[:1000]
+        #train_data = train_data[:1000]
 
     print('단어/문장(w/d)?')
     key = msvcrt.getch()
