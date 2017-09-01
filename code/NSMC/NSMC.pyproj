@@ -5,7 +5,7 @@
     <ProjectGuid>87774ba2-7071-4b7f-aa3c-557b6ff92424</ProjectGuid>
     <ProjectTypeGuids>{a41c8ea1-112a-4a2d-9f91-29557995525f};{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>test_konlpy.py</StartupFile>
+    <StartupFile>Doc2Vec_Doc.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -25,6 +25,12 @@
   <ItemGroup>
     <Compile Include="classifier.py" />
     <Compile Include="crawl_ratings.py" />
+    <Compile Include="Doc2Vec.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Doc2Vec_Doc.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="hangultest.py">
       <SubType>Code</SubType>
     </Compile>
